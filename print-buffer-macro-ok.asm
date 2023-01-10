@@ -1,0 +1,88 @@
+; *************************************************************************
+; 32-bit Windows Console Hello World Application - MASM32 Example
+; EXE File size: 2,560 Bytes
+; Created by Visual MASM (http://www.visualmasm.com)
+; *************************************************************************
+                                    
+.386					; Enable 80386+ instruction set
+.model flat, stdcall	; Flat, 32-bit memory model (not used in 64-bit)
+option casemap: none	; Case insensitive syntax
+
+; *************************************************************************
+; MASM32 proto types for Win32 functions and structures
+; *************************************************************************  
+include c:\masm32\include\kernel32.inc
+include c:\masm32\include\masm32.inc  
+         
+; *************************************************************************
+; MASM32 object libraries
+; *************************************************************************  
+includelib c:\masm32\lib\kernel32.lib
+includelib c:\masm32\lib\masm32.lib     
+
+; *************************************************************************
+; Our data section. Here we declare our strings for our message
+; *************************************************************************
+.data
+	strMessage	db "Hello World!",0
+
+.data?
+	lpBuffer    db 12 dup (?)
+	index        DWORD  ?
+; *************************************************************************
+; Our executable assembly code starts here in the .code section
+; *************************************************************************
+.code
+
+fact	macro	K
+	IF	K eq 1 ;; Based on MASM Version 6.11
+		MOV 	ax, 1 ;; AX  immediate value 1
+		EXITM ;; Exit MACRO
+		;mov cx 4
+	;else
+		;mov eax, 6
+	ENDIF
+	fact	K-1
+	MOV 	BX, K ;; BX  immediate value K
+	MUL 	BX ;; AX  AX × BX
+	ENDM
+
+	
+
+start:
+	; Use the StdOut API function to display the text in a console.
+    invoke StdOut, addr strMessage    
+    
+    mov ax,3
+    sub ax,1
+    ;fact    10
+	movzx ecx,ax
+
+	mov  edx, OFFSET lpBuffer    ; get starting address of string
+	
+Loopp:
+	mov  al, BYTE PTR [edx]  ; get next character
+
+    test al, al              ; test value in AL and set flags
+    jz   Finished            ; AL == 0, so exit the loop
+
+    ; Otherwise, AL != 0, so we fell through.
+    ; Here, you can do do something with the character in AL.
+    ; ...
+    mov BYTE PTR [edx],0
+    inc  edx                 ; increment pointer
+
+    jmp  Loopp                ; keep looping
+    
+Finished:
+	push    offset lpBuffer
+    push    ecx
+    call    dwtoa 
+
+    push    offset lpBuffer             
+    call    StdOut
+
+    
+	; When the console has been closed, exit the app with exit code 0
+    invoke ExitProcess, 0
+end start
